@@ -1,0 +1,25 @@
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=4-00:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  # number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=32           # number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=256G                    # memory required per node - amount of memory (in bytes)
+#SBATCH --job-name JOBNAME      # you can give your job a name for easier identification (same as -J)
+ 
+ 
+########## Command Lines to Run ##########
+
+singularity exec -B /mnt/gs18/scratch/users/lueckeda/:/mnt/gs18/scratch/users/lueckeda/ /mnt/home/lueckeda/SingularityImages/jasongallant-trinity_singularity-master-latest.simg Trinity --seqType fq --SS_lib_type RF --samples_file SAMPLESFILE --CPU 32 --max_memory 256G --trimmomatic
+
+singularity exec -B /mnt/gs18/scratch/users/lueckeda/:/mnt/gs18/scratch/users/lueckeda/ /mnt/home/lueckeda/SingularityImages/jasongallant-trinity_singularity-master-latest.simg /usr/local/bin/trinityrnaseq/util/TrinityStats.pl trinity_out_dir/Trinity.fasta > trinity_out_dir/Trinity.fasta.stats
+
+singularity exec -B /mnt/gs18/scratch/users/lueckeda/:/mnt/gs18/scratch/users/lueckeda/ /mnt/home/lueckeda/SingularityImages/jasongallant-trinity_singularity-master-latest.simg /usr/local/bin/trinityrnaseq/util/misc/get_longest_isoform_seq_per_trinity_gene.pl trinity_out_dir/Trinity.fasta > trinity_out_dir/Trinity.longest.fasta
+
+if [ -f trinity_out_dir/Trinity.fasta ]; then
+	echo "Removing trinity_out_dir/read_partitions/ to save space"
+	\rm -r trinity_out_dir/read_partitions/
+else
+	echo "Cannot find Trinity.fasta!"
+fi
+
